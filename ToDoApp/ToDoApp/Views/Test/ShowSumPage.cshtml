@@ -1,0 +1,70 @@
+﻿
+
+
+
+
+<p>
+
+    Sum Page :
+
+</p>
+
+<div style="border:1px solid red;">
+
+    <form asp-action="Sum1"
+          asp-controller="Test"
+          method="post">
+
+          <div class="form-control">
+
+              <label> مقدار وروردی a </label>
+            <input type="number" name="a" />
+        
+          </div>
+
+          <br />
+
+        <div class="form-control">
+
+            <label> مقدار وروردی b </label>
+            <input type="text" name="b" />
+
+        </div>
+        
+        <br />
+
+        <input type="submit" class="btn btn-success" value="HttpPost Call" />
+
+    </form>
+
+</div>
+
+<div class="mt-5" style="border:1px solid blue;">
+
+    <form asp-action="Sum2"
+          asp-controller="Test"
+          method="get">
+
+        <div class="form-control">
+
+            <label> مقدار وروردی a </label>
+            <input type="number" name="a" />
+
+        </div>
+
+        <br />
+
+        <div class="form-control">
+
+            <label> مقدار وروردی b </label>
+            <input type="text" name="b" />
+
+        </div>
+
+        <br />
+
+        <input type="submit" class="btn btn-primary" value="HttpGet Call" />
+
+    </form>
+
+</div>
