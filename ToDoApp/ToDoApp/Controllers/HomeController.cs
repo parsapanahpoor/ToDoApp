@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using ToDoApp.Models;
 
 namespace ToDoApp.Controllers
 {
