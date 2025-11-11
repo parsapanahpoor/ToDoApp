@@ -11,4 +11,11 @@
         برای مشاهده ی اطلاعات بیشتر کلیک کنید »»
     </a>
 
+    <hr />
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <span class="btn btn-outline-success">خوش آمدید @User.Identity.Name </span>
+    }
+
 </div>

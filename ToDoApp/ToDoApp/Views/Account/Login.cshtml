@@ -1,0 +1,26 @@
+﻿@using ToDoApp.Domain.Model.Account
+@model LoginUserDto
+
+<h1>صفحه ی ورود</h1>
+
+<div>
+
+    @if (ViewBag.Message != null)
+    {
+        <span class="badge badge-danger" > @ViewBag.Message </span>
+    }
+
+    <form asp-controller="Account"
+          asp-action="Login"
+          method="post">
+
+        <input type="text" asp-for="PhoneNumber" placeholder="شماره موبایل خود را وارد کنید." />
+        <br />
+        <input type="password" asp-for="Password" placeholder="کلمه ی عبور خود را وارد کنید." />
+        <br />
+
+        <input type="submit" value="ورود" class="btn btn-success" />
+
+    </form>
+
+</div>

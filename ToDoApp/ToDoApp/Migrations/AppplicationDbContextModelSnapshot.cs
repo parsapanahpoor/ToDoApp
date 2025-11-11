@@ -10,7 +10,7 @@ using ToDoApp.Infra;
 
 namespace ToDoApp.Migrations
 {
-    [DbContext(typeof(AppplicationDbContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     partial class AppplicationDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

@@ -11,7 +11,7 @@ using ToDoApp.Infra;
 
 namespace ToDoApp.Migrations
 {
-    [DbContext(typeof(AppplicationDbContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20251104173112_Initial-FirstMigration")]
     partial class InitialFirstMigration
     {

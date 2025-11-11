@@ -3,11 +3,11 @@ using ToDoApp.Domain.Entities.Account;
 
 namespace ToDoApp.Infra;
 
-public class AppplicationDbContext : DbContext
+public class ApplicationDbContext : DbContext
 {
     #region Ctor
 
-    public AppplicationDbContext(DbContextOptions<AppplicationDbContext> options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
            : base(options) { }
 
     #endregion
