@@ -1,6 +1,6 @@
 ﻿namespace ToDoApp.Domain.Entities.Account;
 
-public class UserEntity : BaseEntities<ulong>
+public class User : BaseEntities<ulong>
 {
     public string UserName { get; set; }
     public string Password { get; set; }
