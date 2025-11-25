@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using ToDoApp.Application.Services.Account;
 using ToDoApp.Infra;
 
 namespace ToDoApp;
@@ -20,6 +21,12 @@ public class Program
         {
             options.UseSqlServer(builder.Configuration.GetConnectionString("ApplicationDbContextConnection"));
         });
+
+        #endregion
+
+        #region Service Registrations
+
+        builder.Services.AddScoped<RoleService>();
 
         #endregion
 
