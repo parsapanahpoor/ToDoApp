@@ -1,0 +1,145 @@
+@model ToDoApp.Domain.Model.Task.FilterCategoriesDto;
+
+@{
+    ViewData["Title"] = "لیست دسته‌بندی‌ها";
+}
+
+@section Styles
+{
+
+}
+
+@section Scripts
+{
+    <partial name="_AdminSweetAlertLocalizer" />
+}
+
+@section Breadcrumb
+{
+    <li>
+        <a href="javascript:void(0)"> @ViewData["Title"] </a>
+    </li>
+}
+
+    <div class="row">
+        <div class="col-lg-3 col-sm-12">
+
+            <a class="btn btn-sky w-100 margin-bottom-10" 
+            asp-action="CreateCategory" 
+            asp-controller="Category" 
+            asp-area="Admin">
+                ایجاد دسته‌بندی جدید
+            </a>
+
+        <div class="widget">
+            <div class="widget-header bordered-bottom bordered-green">
+                <span class="widget-caption"> @ViewData["Title"] </span>
+            </div>
+            <div class="widget-body">
+                <div>
+                    <form 
+                        asp-action="FilterCategories" 
+                        asp-controller="Category" 
+                        asp-area="Admin" 
+                        id="filter-search" 
+                        method="get">
+
+                        <input type="hidden" asp-for="Page" />
+
+                        <div class="form-group">
+                            <label asp-for="Title"> عنوان دسته‌بندی </label>
+                            <input type="text" class="form-control" asp-for="Title">
+                        </div>
+
+                        <hr />
+
+                        <div class="row">
+                            <div class="col-md-12 flex-style">
+                                <button type="submit" class="btn btn-labeled w-100 btn-palegreen">
+                                    <i class="btn-label glyphicon glyphicon-filter"></i>اعمال فیلتر
+                                </button>
+
+                                @if (Context.Request.QueryString.HasValue)
+                                {
+                                        <a asp-area="Admin" asp-controller="Category" asp-action="FilterCategories" class="btn btn-labeled w-100 btn-darkorange">
+                                            <i class="btn-label glyphicon glyphicon-remove"></i>
+                                            حذف فیلتر
+                                        </a>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-9 col-sm-12">
+        <div class="well with-header with-footer table-responsive">
+            <div class="header bordered-azure">
+                <div class="flex-style">
+                    <span> @ViewData["Title"] </span>
+                    <span>@Model.GetShownEntitiesPagesTitle()</span>
+                </div>
+            </div>
+
+            @if (Model.Entities != null && Model.Entities.Any())
+            {
+                <table class="table table-hover table-bordered tc vm">
+                    <thead class="tc vm">
+                        <tr class="tc vm">
+                            <th class="tc vm">
+                                عنوان
+                            </th>
+                            <th class="tc vm">
+                                رنگ
+                            </th>
+                            <th class="tc vm">
+                                امکانات
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="tc vm">
+                        @foreach (var category in Model.Entities)
+                        {
+                            <tr class="tc vm" remove-ajax-item="@category.Id">
+                                <td class="tc vm">
+                                    <p> @category.Title </p>
+                                    @if (!string.IsNullOrEmpty(category.Description))
+                                    {
+                                        <small class="text-muted">@category.Description</small>
+                                    }
+                                </td>
+                                <td class="tc vm">
+                                    @if (!string.IsNullOrEmpty(category.Color))
+                                    {
+                                        <span class="badge" style="background-color: @category.Color; color: white;">@category.Color</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td class="tc vm">
+                                    <a asp-action="EditCategory" asp-controller="Category" asp-area="Admin" asp-route-id="@category.Id" class="btn btn-warning btn-circle btn-xs"><i class="glyphicon glyphicon-edit"></i></a>
+                                    <button onclick="DeleteAjax(@category.Id, '@Url.Action("DeleteCategory", "Category", new { area = "Admin", categoryId = category.Id })')" class="btn btn-danger btn-circle btn-xs"><i class="glyphicon glyphicon-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="footer tc">
+
+                    <partial name="_AdminPaging" model="@Model.GetCurrentPaging()" />
+
+                </div>
+            }
+            else
+            {
+                <partial name="_AdminNotFoundPartial" />
+            }
+        </div>
+    </div>
+</div>
+

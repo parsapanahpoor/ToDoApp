@@ -58,5 +58,26 @@
             </ul>
         </li>
 
+        <li>
+            <a href="#" class="menu-dropdown">
+                <i class="menu-icon fa fa-folder"></i>
+                <span class="menu-text"> مدیریت دسته‌بندی‌ها </span>
+                <i class="menu-expand"></i>
+            </a>
+
+            <ul class="submenu">
+                <li>
+                    <a asp-action="FilterCategories" asp-controller="Category" asp-area="Admin">
+                        <span class="menu-text"> لیست دسته‌بندی‌ها </span>
+                    </a>
+                </li>
+                <li>
+                    <a asp-action="CreateCategory" asp-controller="Category" asp-area="Admin">
+                        <span class="menu-text"> ثبت دسته‌بندی جدید </span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
     </ul>
 </div>

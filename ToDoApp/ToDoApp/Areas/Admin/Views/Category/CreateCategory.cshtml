@@ -1,0 +1,78 @@
+@using ToDoApp.Domain.Model.Task
+@model CreateCategoryDto
+
+@{
+    ViewData["Title"] = "افزودن دسته‌بندی جدید";
+}
+
+@section Scripts
+{
+    <partial name="_JqueryValidation" />
+}
+
+@section Breadcrumb
+{
+    <li>
+        <a asp-action="FilterCategories" asp-controller="Category" asp-area="Admin"> لیست دسته‌بندی‌ها </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)"> @ViewData["Title"] </a>
+    </li>
+}
+
+<form method="post" asp-action="CreateCategory" asp-controller="Category" asp-area="Admin">
+
+    <div class="row">
+        <div class="col-lg-12 col-sm-12">
+            <div class="widget">
+                <div class="widget-header bordered-bottom bordered-green">
+                    <span class="widget-caption"> @ViewData["Title"] </span>
+                </div>
+                <div class="widget-body">
+                    <div>
+
+                        <div class="row">
+                            <div class="form-group col-md-12 col-sm-12">
+                                <label asp-for="Title">عنوان دسته‌بندی</label>
+                                <input type="text" class="form-control" asp-for="Title">
+                                <span class="text-danger" asp-validation-for="Title"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group col-md-12 col-sm-12">
+                                <label asp-for="Description">توضیحات</label>
+                                <textarea class="form-control" asp-for="Description" rows="3"></textarea>
+                                <span class="text-danger" asp-validation-for="Description"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="form-group col-md-12 col-sm-12">
+                                <label asp-for="Color">رنگ (Hex Code)</label>
+                                <input type="color" class="form-control" asp-for="Color" value="#3788d8">
+                                <small class="text-muted">مثال: #FF5733 یا #3788d8</small>
+                                <span class="text-danger" asp-validation-for="Color"></span>
+                            </div>
+                        </div>
+
+                        <hr class="margin-bottom-10 margin-top-10" />
+
+                        <div class="row">
+                            <div class="col-md-12 flex-style">
+                                <button type="submit" class="btn btn-labeled btn-palegreen">
+                                    <i class="btn-label glyphicon glyphicon-ok"></i>ثبت
+                                </button>
+                                <a asp-action="FilterCategories" asp-controller="Category" asp-area="Admin" class="btn btn-labeled btn-darkorange">
+                                    <i class="btn-label glyphicon glyphicon-arrow-right"></i>بازگشت
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+

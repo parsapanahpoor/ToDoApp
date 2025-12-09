@@ -1,0 +1,342 @@
+@using ToDoApp.Domain.Model.Task
+@using ToDoApp.Application.Helpers
+@model WeeklyCalendarDto
+
+@{
+    ViewData["Title"] = "تقویم هفتگی";
+    var language = Context.Items["Language"]?.ToString() ?? "fa";
+    var isPersian = language == "fa";
+}
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <h2>@(isPersian ? "تقویم هفتگی" : "Weekly Calendar")</h2>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group">
+                <a href="?lang=fa" class="btn btn-sm @(isPersian ? "btn-primary" : "btn-outline-primary")">فارسی</a>
+                <a href="?lang=en" class="btn btn-sm @(!isPersian ? "btn-primary" : "btn-outline-primary")">English</a>
+            </div>
+            <button type="button" class="btn btn-success" style="margin-left: 10px;" onclick="openCreateTaskModal()">
+                <i class="fa fa-plus"></i> @(isPersian ? "افزودن Task" : "Add Task")
+            </button>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary" onclick="loadPreviousWeek()">
+                    <i class="fa fa-chevron-left"></i> @(isPersian ? "هفته قبل" : "Previous Week")
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="loadCurrentWeek()">
+                    @(isPersian ? "هفته جاری" : "Current Week")
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="loadNextWeek()">
+                    @(isPersian ? "هفته بعد" : "Next Week") <i class="fa fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="calendar" style="min-height: 600px;"></div>
+</div>
+
+<!-- Create/Edit Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">@(isPersian ? "افزودن Task جدید" : "Add New Task")</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="taskForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <input type="hidden" id="taskId" name="Id" />
+                    <div class="mb-3">
+                        <label class="form-label">@(isPersian ? "عنوان" : "Title")</label>
+                        <input type="text" class="form-control" id="taskTitle" name="Title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@(isPersian ? "توضیحات" : "Description")</label>
+                        <textarea class="form-control" id="taskDescription" name="Description" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@(isPersian ? "تاریخ و زمان" : "Date & Time")</label>
+                        <input type="datetime-local" class="form-control" id="taskDateTime" name="TaskDateTime" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@(isPersian ? "اولویت" : "Priority")</label>
+                        <select class="form-select" id="taskPriority" name="Priority" required>
+                            <option value="1">@(isPersian ? "پایین" : "Low")</option>
+                            <option value="2" selected>@(isPersian ? "متوسط" : "Medium")</option>
+                            <option value="3">@(isPersian ? "بالا" : "High")</option>
+                            <option value="4">@(isPersian ? "بحرانی" : "Critical")</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">@(isPersian ? "دسته‌بندی" : "Category")</label>
+                        <select class="form-select" id="taskCategory" name="CategoryId">
+                            <option value="">@(isPersian ? "بدون دسته‌بندی" : "No Category")</option>
+                            @if (ViewBag.Categories != null)
+                            {
+                                @foreach (var category in ViewBag.Categories as List<ToDoApp.Domain.Entities.Task.Category>)
+                                {
+                                    <option value="@category.Id">@category.Title</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">@(isPersian ? "بستن" : "Close")</button>
+                    <button type="submit" class="btn btn-primary">@(isPersian ? "ذخیره" : "Save")</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link href="~/admin/css/beyond-rtl.min.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <!-- Moment.js must be loaded before FullCalendar -->
+    <script src="~/admin/js/datetime/moment.js" onerror="console.error('Failed to load moment.js')"></script>
+    <!-- FullCalendar -->
+    <script src="~/admin/js/fullcalendar/fullcalendar.js" onerror="console.error('Failed to load fullcalendar.js')"></script>
+    
+    <script>
+        var currentWeekStart = '@Model.WeekStartDate.ToString("yyyy-MM-dd")';
+        var isPersian = @(isPersian ? "true" : "false");
+        
+        // Serialize tasks with proper date formatting
+        @{
+            var jsonOptions = new System.Text.Json.JsonSerializerOptions 
+            { 
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase 
+            };
+        }
+        var tasksData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Tasks, jsonOptions));
+
+        function openCreateTaskModal() {
+            // Reset form
+            $('#taskForm')[0].reset();
+            $('#taskId').val(0);
+            
+            // Set default date/time to current week start + current time
+            var now = moment();
+            var defaultDateTime = now.format('YYYY-MM-DDTHH:mm');
+            $('#taskDateTime').val(defaultDateTime);
+            
+            // Show modal using Bootstrap 5
+            var modalElement = document.getElementById('createTaskModal');
+            if (typeof bootstrap !== 'undefined') {
+                var modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                // Fallback for older Bootstrap
+                $(modalElement).modal('show');
+            }
+        }
+
+        // Wait for all scripts to load - use window.onload instead of document.ready
+        window.addEventListener('load', function() {
+            // Check if jQuery is loaded
+            if (typeof jQuery === 'undefined' || typeof $ === 'undefined') {
+                console.error('jQuery is not loaded!');
+                alert('خطا در بارگذاری jQuery. لطفا صفحه را رفرش کنید.');
+                return;
+            }
+
+            // Check if moment is loaded
+            if (typeof moment === 'undefined') {
+                console.error('Moment.js is not loaded!');
+                alert('خطا در بارگذاری کتابخانه تاریخ. لطفا صفحه را رفرش کنید.');
+                return;
+            }
+
+            // Wait a bit more for FullCalendar to initialize
+            setTimeout(function() {
+                // Check if FullCalendar is loaded
+                if (typeof $.fullCalendar === 'undefined') {
+                    console.error('FullCalendar is not loaded!');
+                    console.log('jQuery version:', $.fn.jquery);
+                    console.log('Moment version:', typeof moment !== 'undefined' ? moment.version : 'undefined');
+                    console.log('jQuery object:', typeof $);
+                    console.log('FullCalendar check:', typeof $.fullCalendar);
+                    alert('خطا در بارگذاری تقویم. لطفا Console مرورگر را بررسی کنید (F12).');
+                    return;
+                }
+
+            console.log('Tasks Data:', tasksData);
+            console.log('Formatted Events:', formatTasksForCalendar(tasksData));
+
+            $('#calendar').fullCalendar({
+                header: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'month,agendaWeek,agendaDay'
+                },
+                defaultView: 'agendaWeek',
+                defaultDate: currentWeekStart,
+                editable: true,
+                eventLimit: true,
+                allDaySlot: true,
+                slotDuration: '00:30:00',
+                minTime: '00:00:00',
+                maxTime: '24:00:00',
+                height: 'auto',
+                contentHeight: 'auto',
+                events: formatTasksForCalendar(tasksData),
+                eventClick: function(calEvent, jsEvent, view) {
+                    editTask(calEvent.id);
+                },
+                dayClick: function(date, jsEvent, view) {
+                    var clickedDate = date.format('YYYY-MM-DDTHH:mm');
+                    $('#taskDateTime').val(clickedDate);
+                    openCreateTaskModal();
+                },
+                eventDrop: function(event, delta, revertFunc) {
+                    updateTaskDateTime(event.id, event.start.format());
+                },
+                eventResize: function(event, delta, revertFunc) {
+                    updateTaskDateTime(event.id, event.start.format(), event.end.format());
+                },
+                loading: function(isLoading) {
+                    if (isLoading) {
+                        console.log('Calendar is loading...');
+                    } else {
+                        console.log('Calendar loaded successfully');
+                    }
+                }
+            });
+
+            $('#taskForm').on('submit', function(e) {
+                e.preventDefault();
+                saveTask();
+            });
+            }, 100); // Wait 100ms for FullCalendar to initialize
+        });
+
+        function formatTasksForCalendar(tasks) {
+            if (!tasks || tasks.length === 0) {
+                console.log('No tasks to display');
+                return [];
+            }
+            
+            return tasks.map(function(task) {
+                var color = task.categoryColor || '#3788d8';
+                if (task.isCompleted) {
+                    color = '#95a5a6';
+                } else {
+                    switch(task.priority) {
+                        case 1: color = '#3498db'; break; // Low - Blue
+                        case 2: color = '#f39c12'; break; // Medium - Orange
+                        case 3: color = '#e74c3c'; break; // High - Red
+                        case 4: color = '#8e44ad'; break; // Critical - Purple
+                    }
+                }
+                
+                // Format date for FullCalendar (ISO 8601 format)
+                var startDate = task.taskDateTime;
+                if (typeof startDate === 'string') {
+                    // If it's a string, use it directly (should be ISO format)
+                    startDate = startDate;
+                } else {
+                    // If it's a Date object, convert to ISO string
+                    startDate = new Date(startDate).toISOString();
+                }
+                
+                return {
+                    id: task.id,
+                    title: task.title,
+                    start: startDate,
+                    color: color,
+                    textColor: '#ffffff',
+                    description: task.description || ''
+                };
+            });
+        }
+
+        function loadPreviousWeek() {
+            var date = moment(currentWeekStart).subtract(7, 'days');
+            window.location.href = '/Task/WeeklyCalendar?weekStartDate=' + date.format('YYYY-MM-DD');
+        }
+
+        function loadCurrentWeek() {
+            window.location.href = '/Task/WeeklyCalendar';
+        }
+
+        function loadNextWeek() {
+            var date = moment(currentWeekStart).add(7, 'days');
+            window.location.href = '/Task/WeeklyCalendar?weekStartDate=' + date.format('YYYY-MM-DD');
+        }
+
+        function saveTask() {
+            var formData = {
+                Id: $('#taskId').val() || 0,
+                Title: $('#taskTitle').val(),
+                Description: $('#taskDescription').val(),
+                TaskDateTime: $('#taskDateTime').val(),
+                Priority: parseInt($('#taskPriority').val()),
+                CategoryId: $('#taskCategory').val() || null
+            };
+
+            // Get AntiForgeryToken
+            var token = $('input[name="__RequestVerificationToken"]').val();
+            formData.__RequestVerificationToken = token;
+
+            var url = formData.Id > 0 ? '/Task/EditTask' : '/Task/CreateTask';
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        var modalElement = document.getElementById('createTaskModal');
+                        var modal = bootstrap.Modal.getInstance(modalElement);
+                        if (modal) {
+                            modal.hide();
+                        }
+                        location.reload();
+                    } else {
+                        alert(response.message || 'خطا در ذخیره Task');
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.status === 400) {
+                        alert('اطلاعات وارد شده معتبر نمی‌باشد');
+                    } else {
+                        alert('خطا در ارتباط با سرور');
+                    }
+                }
+            });
+        }
+
+        function editTask(taskId) {
+            window.location.href = '/Task/EditTask/' + taskId;
+        }
+
+        function updateTaskDateTime(taskId, startDateTime, endDateTime) {
+            $.ajax({
+                url: '/Task/UpdateTaskDateTime',
+                method: 'POST',
+                data: {
+                    taskId: taskId,
+                    taskDateTime: startDateTime
+                },
+                success: function(response) {
+                    if (!response.success) {
+                        location.reload();
+                    }
+                }
+            });
+        }
+    </script>
+}
+

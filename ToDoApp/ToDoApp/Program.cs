@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using ToDoApp.Application.Middleware;
 using ToDoApp.Application.Services.Account;
 using ToDoApp.Infra;
 
@@ -28,6 +29,8 @@ public class Program
 
         builder.Services.AddScoped<RoleService>();
         builder.Services.AddScoped<UserService>();
+        builder.Services.AddScoped<ToDoApp.Application.Services.Task.CategoryService>();
+        builder.Services.AddScoped<ToDoApp.Application.Services.Task.TaskService>();
 
         #endregion
 
@@ -64,6 +67,9 @@ public class Program
 
         app.UseHttpsRedirection();
         app.UseStaticFiles();
+
+        // Language Middleware
+        app.UseLanguageMiddleware();
 
         app.UseRouting();
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ToDoApp.Domain.Entities.Account;
+using ToDoApp.Domain.Entities.Task;
 
 namespace ToDoApp.Infra;
 
@@ -19,6 +20,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Role> Roles { get; set; }
     public DbSet<UserRole> UserRoles { get; set; }
 
+    public DbSet<Category> Categories { get; set; }
+    public DbSet<TaskEntity> Tasks { get; set; }
+
     #endregion
 
     #region OnConfiguring
@@ -34,6 +38,21 @@ public class ApplicationDbContext : DbContext
             relationship.DeleteBehavior = DeleteBehavior.Restrict;
 
         modelBuilder.Entity<Role>().HasQueryFilter(p=> !p.IsDelete);
+        modelBuilder.Entity<Category>().HasQueryFilter(p=> !p.IsDelete);
+        modelBuilder.Entity<TaskEntity>().HasQueryFilter(p=> !p.IsDelete);
+
+        // Configure TaskEntity relationships
+        modelBuilder.Entity<TaskEntity>()
+            .HasOne(t => t.User)
+            .WithMany()
+            .HasForeignKey(t => t.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<TaskEntity>()
+            .HasOne(t => t.Category)
+            .WithMany()
+            .HasForeignKey(t => t.CategoryId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         base.OnModelCreating(modelBuilder);
     }

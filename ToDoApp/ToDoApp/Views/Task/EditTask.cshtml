@@ -1,0 +1,87 @@
+@using ToDoApp.Domain.Model.Task
+@model EditTaskDto
+
+@{
+    ViewData["Title"] = "ویرایش Task";
+    var language = Context.Items["Language"]?.ToString() ?? "fa";
+    var isPersian = language == "fa";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header">
+                    <h4>@(isPersian ? "ویرایش Task" : "Edit Task")</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="EditTask" asp-controller="Task">
+                        <input type="hidden" asp-for="Id" />
+                        
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label"></label>
+                            <input type="text" class="form-control" asp-for="Title">
+                            <span class="text-danger" asp-validation-for="Title"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea class="form-control" asp-for="Description" rows="3"></textarea>
+                            <span class="text-danger" asp-validation-for="Description"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="TaskDateTime" class="form-label"></label>
+                            <input type="datetime-local" class="form-control" asp-for="TaskDateTime">
+                            <span class="text-danger" asp-validation-for="TaskDateTime"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Priority" class="form-label"></label>
+                            <select class="form-select" asp-for="Priority">
+                                <option value="1">@(isPersian ? "پایین" : "Low")</option>
+                                <option value="2">@(isPersian ? "متوسط" : "Medium")</option>
+                                <option value="3">@(isPersian ? "بالا" : "High")</option>
+                                <option value="4">@(isPersian ? "بحرانی" : "Critical")</option>
+                            </select>
+                            <span class="text-danger" asp-validation-for="Priority"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select class="form-select" asp-for="CategoryId">
+                                <option value="">@(isPersian ? "بدون دسته‌بندی" : "No Category")</option>
+                                @if (ViewBag.Categories != null)
+                                {
+                                    @foreach (var category in ViewBag.Categories as List<ToDoApp.Domain.Entities.Task.Category>)
+                                    {
+                                        <option value="@category.Id">@category.Title</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" asp-for="IsCompleted">
+                            <label class="form-check-label" asp-for="IsCompleted">
+                                @(isPersian ? "انجام شده" : "Completed")
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">@(isPersian ? "ذخیره" : "Save")</button>
+                            <a asp-action="WeeklyCalendar" asp-controller="Task" class="btn btn-secondary">
+                                @(isPersian ? "بازگشت" : "Back")
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
