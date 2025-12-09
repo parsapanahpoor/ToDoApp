@@ -1,0 +1,31 @@
+@using ToDoApp.Domain.Entities.Account
+@model List<Role>
+
+@{
+    var selectedRoles = ViewBag.SelectedRoles as List<ulong> ?? new List<ulong>();
+}
+
+<div class="form-group">
+    <label>‰ﬁ‘ùÂ«? ò«—»—</label>
+    <select name="SelectedRoles" multiple class="form-control" style="min-height: 200px;">
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var role in Model)
+            {
+                @if (selectedRoles.Contains(role.Id))
+                {
+                    <option value="@role.Id" selected="selected">@role.Title</option>
+                }
+                else
+                {
+                    <option value="@role.Id">@role.Title</option>
+                }
+            }
+        }
+        else
+        {
+            <option disabled>‰ﬁ‘? ?«›  ‰‘œ</option>
+        }
+    </select>
+    <small class="text-muted">»—«? «‰ Œ«» ç‰œ ‰ﬁ‘° ò·?œ Ctrl (?« Cmd œ— Mac) —« ‰êÂ œ«—?œ Ê —Ê? ‰ﬁ‘ùÂ« ò·?ò ò‰?œ</small>
+</div>

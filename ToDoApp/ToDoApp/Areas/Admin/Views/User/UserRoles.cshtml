@@ -1,0 +1,82 @@
+@using ToDoApp.Domain.Model.Account
+@model UserRolesDto
+
+@{
+    ViewData["Title"] = "نقش‌های کاربر";
+}
+
+@section Breadcrumb
+{
+    <li>
+        <a asp-action="FilterUsers" asp-controller="User" asp-area="Admin"> لیست کاربران </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)"> @ViewData["Title"] </a>
+    </li>
+}
+
+<div class="row">
+    <div class="col-lg-12 col-sm-12">
+        <div class="widget">
+            <div class="widget-header bordered-bottom bordered-green">
+                <span class="widget-caption"> @ViewData["Title"] - @Model.UserName </span>
+            </div>
+            <div class="widget-body">
+                <div>
+                    @if (Model.Roles != null && Model.Roles.Any())
+                    {
+                        <table class="table table-hover table-bordered tc vm">
+                            <thead class="tc vm">
+                                <tr class="tc vm">
+                                    <th class="tc vm">عنوان نقش</th>
+                                    <th class="tc vm">وضعیت</th>
+                                </tr>
+                            </thead>
+                            <tbody class="tc vm">
+                                @foreach (var role in Model.Roles)
+                                {
+                                    <tr class="tc vm">
+                                        <td class="tc vm">
+                                            <p> @role.RoleTitle </p>
+                                        </td>
+                                        <td class="tc vm">
+                                            @if (role.IsSelected)
+                                            {
+                                                <span class="label label-success">دارای نقش</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="label label-default">فاقد نقش</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info">
+                            <strong>توجه!</strong> هیچ نقشی در سیستم تعریف نشده است.
+                        </div>
+                    }
+
+                    <hr />
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <a asp-action="EditUser" asp-controller="User" asp-area="Admin" asp-route-id="@Model.UserId" class="btn btn-labeled btn-palegreen">
+                                <i class="btn-label glyphicon glyphicon-edit"></i>ویرایش نقش‌ها
+                            </a>
+                            <a asp-action="FilterUsers" asp-controller="User" asp-area="Admin" class="btn btn-labeled btn-darkorange">
+                                <i class="btn-label glyphicon glyphicon-arrow-right"></i>بازگشت
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

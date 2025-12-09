@@ -27,6 +27,7 @@ public class Program
         #region Service Registrations
 
         builder.Services.AddScoped<RoleService>();
+        builder.Services.AddScoped<UserService>();
 
         #endregion
 

@@ -1,0 +1,89 @@
+@using ToDoApp.Domain.Model.Account
+@model CreateUserDto
+
+@{
+    ViewData["Title"] = "افزودن کاربر جدید";
+}
+
+@section Scripts
+{
+    <partial name="_JqueryValidation" />
+}
+
+@section Breadcrumb
+{
+    <li>
+        <a asp-action="FilterUsers" asp-controller="User" asp-area="Admin"> لیست کاربران </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)"> @ViewData["Title"] </a>
+    </li>
+}
+
+<form method="post" asp-action="CreateUser" asp-controller="User" asp-area="Admin">
+
+    <div class="row">
+        <div class="col-lg-12 col-sm-12">
+            <div class="widget">
+                <div class="widget-header bordered-bottom bordered-green">
+                    <span class="widget-caption"> @ViewData["Title"] </span>
+                </div>
+                <div class="widget-body">
+                    <div>
+
+                        <div class="row">
+                            <div class="col-md-8 col-sm-12">
+                                <div class="row">
+                                    <div class="form-group col-md-6 col-sm-12">
+                                        <label asp-for="UserName">نام کاربری</label>
+                                        <input type="text" class="form-control" asp-for="UserName">
+                                        <span class="text-danger" asp-validation-for="UserName"></span>
+                                    </div>
+
+                                    <div class="form-group col-md-6 col-sm-12">
+                                        <label asp-for="Email">ایمیل</label>
+                                        <input type="email" class="form-control" asp-for="Email">
+                                        <span class="text-danger" asp-validation-for="Email"></span>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="form-group col-md-6 col-sm-12">
+                                        <label asp-for="PhoneNumber">شماره تلفن</label>
+                                        <input type="text" class="form-control" asp-for="PhoneNumber">
+                                        <span class="text-danger" asp-validation-for="PhoneNumber"></span>
+                                    </div>
+
+                                    <div class="form-group col-md-6 col-sm-12">
+                                        <label asp-for="Password">کلمه عبور</label>
+                                        <input type="password" class="form-control" asp-for="Password">
+                                        <span class="text-danger" asp-validation-for="Password"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 col-sm-12">
+                                @await Component.InvokeAsync("RoleSelection", new { selectedRoles = Model.SelectedRoles })
+                            </div>
+                        </div>
+
+                        <hr class="margin-bottom-10 margin-top-10" />
+
+                        <div class="row">
+                            <div class="col-md-12 flex-style">
+                                <button type="submit" class="btn btn-labeled btn-palegreen">
+                                    <i class="btn-label glyphicon glyphicon-ok"></i>ثبت
+                                </button>
+                                <a asp-action="FilterUsers" asp-controller="User" asp-area="Admin" class="btn btn-labeled btn-darkorange">
+                                    <i class="btn-label glyphicon glyphicon-arrow-right"></i>بازگشت
+                                </a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+

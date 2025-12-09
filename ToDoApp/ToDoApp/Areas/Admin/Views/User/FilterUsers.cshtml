@@ -1,0 +1,145 @@
+@model ToDoApp.Domain.Model.Account.FilterUsersDto;
+
+@{
+    ViewData["Title"] = "لیست کاربران";
+}
+
+@section Styles
+{
+
+}
+
+@section Scripts
+{
+    <partial name="_AdminSweetAlertLocalizer" />
+}
+
+@section Breadcrumb
+{
+    <li>
+        <a href="javascript:void(0)"> @ViewData["Title"] </a>
+    </li>
+}
+
+<div class="row">
+    <div class="col-lg-3 col-sm-12">
+
+        <a class="btn btn-sky w-100 margin-bottom-10" 
+           asp-action="CreateUser" 
+           asp-controller="User" 
+           asp-area="Admin">
+            ایجاد کاربر جدید
+        </a>
+
+        <div class="widget">
+            <div class="widget-header bordered-bottom bordered-green">
+                <span class="widget-caption"> جستجوی کاربران </span>
+            </div>
+            <div class="widget-body">
+                <div>
+                    <form 
+                        asp-action="FilterUsers" 
+                        asp-controller="User" 
+                        asp-area="Admin" 
+                        id="filter-search" 
+                        method="get">
+
+                        <input type="hidden" asp-for="Page" />
+
+                        <div class="form-group">
+                            <label asp-for="UserName"> نام کاربری </label>
+                            <input type="text" class="form-control" asp-for="UserName">
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Email"> ایمیل </label>
+                            <input type="text" class="form-control" asp-for="Email">
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="PhoneNumber"> شماره تلفن </label>
+                            <input type="text" class="form-control" asp-for="PhoneNumber">
+                        </div>
+
+                        <hr />
+
+                        <div class="row">
+                            <div class="col-md-12 flex-style">
+                                <button type="submit" class="btn btn-labeled w-100 btn-palegreen">
+                                    <i class="btn-label glyphicon glyphicon-filter"></i>اعمال فیلتر
+                                </button>
+
+                                @if (Context.Request.QueryString.HasValue)
+                                {
+                                    <a asp-area="Admin" asp-controller="User" asp-action="FilterUsers" class="btn btn-labeled w-100 btn-darkorange">
+                                        <i class="btn-label glyphicon glyphicon-remove"></i>
+                                        حذف فیلتر
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-9 col-sm-12">
+        <div class="well with-header with-footer table-responsive">
+            <div class="header bordered-azure">
+                <div class="flex-style">
+                    <span> @ViewData["Title"] </span>
+                    <span>@Model.GetShownEntitiesPagesTitle()</span>
+                </div>
+            </div>
+
+            @if (Model.Entities != null && Model.Entities.Any())
+            {
+                <table class="table table-hover table-bordered tc vm">
+                    <thead class="tc vm">
+                        <tr class="tc vm">
+                            <th class="tc vm">نام کاربری</th>
+                            <th class="tc vm">ایمیل</th>
+                            <th class="tc vm">شماره تلفن</th>
+                            <th class="tc vm">تاریخ ثبت‌نام</th>
+                            <th class="tc vm">امکانات</th>
+                        </tr>
+                    </thead>
+                    <tbody class="tc vm">
+                        @foreach (var user in Model.Entities)
+                        {
+                            <tr class="tc vm" remove-ajax-item="@user.Id">
+                                <td class="tc vm">
+                                    <p> @user.UserName </p>
+                                </td>
+                                <td class="tc vm">
+                                    <p> @user.Email </p>
+                                </td>
+                                <td class="tc vm">
+                                    <p> @user.PhoneNumber </p>
+                                </td>
+                                <td class="tc vm">
+                                    <p> @user.CreateDate.ToString("yyyy/MM/dd") </p>
+                                </td>
+                                <td class="tc vm">
+                                    <a asp-action="UserRoles" asp-controller="User" asp-area="Admin" asp-route-userId="@user.Id" class="btn btn-info btn-circle btn-xs" title="نقش‌های کاربر"><i class="glyphicon glyphicon-user"></i></a>
+                                    <a asp-action="EditUser" asp-controller="User" asp-area="Admin" asp-route-id="@user.Id" class="btn btn-warning btn-circle btn-xs" title="ویرایش"><i class="glyphicon glyphicon-edit"></i></a>
+                                    <button onclick="DeleteAjax(@user.Id, '@Url.Action("DeleteUser", "User", new { area = "Admin", userId = user.Id })')" class="btn btn-danger btn-circle btn-xs" title="حذف"><i class="glyphicon glyphicon-trash"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <div class="footer tc">
+                    <partial name="_AdminPaging" model="@Model.GetCurrentPaging()" />
+                </div>
+            }
+            else
+            {
+                <partial name="_AdminNotFoundPartial" />
+            }
+        </div>
+    </div>
+</div>
+
