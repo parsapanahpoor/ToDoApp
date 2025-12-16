@@ -1,18 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ToDoApp.Application.Services.Account;
+using ToDoApp.Application.Interfaces;
 using ToDoApp.Domain.Model.Account;
 using ToDoApp.HttpManager;
 
 namespace ToDoApp.Areas.Admin.Controllers;
 
-public class AccessController(
-    RoleService roleService) : 
-    AdminBaseController
+public class AccessController : AdminBaseController
 {
+    private readonly IRoleService _roleService;
+
+    public AccessController(IRoleService roleService)
+    {
+        _roleService = roleService;
+    }
+
     #region Filter roles
 
-    public async Task<IActionResult> FilterRoles(FilterRolesDto filter)
-        => View(await roleService.FilterRoles(filter));
+    public async Task<IActionResult> FilterRoles(FilterRolesDto filter, CancellationToken cancellationToken)
+        => View(await _roleService.FilterRoles(filter, cancellationToken));
 
     #endregion
 
@@ -22,22 +27,31 @@ public class AccessController(
         => View();
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> CreateRole(CreateRoleDto model)
+    public async Task<IActionResult> CreateRole(CreateRoleDto model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
-            TempData[ErrorMessage] = "Entered data was not Valid!";
+            TempData[ErrorMessage] = "داده‌های وارد شده معتبر نیستند";
             return View(model);
         }
 
-        var result = await roleService.CreateRole(model);
-        if (result)
+        var result = await _roleService.CreateRole(model, cancellationToken);
+        
+        if (result.IsSuccess)
         {
-            TempData[SuccessMessage] = "Operation was success";
+            TempData[SuccessMessage] = result.Message;
             return RedirectToAction(nameof(FilterRoles));
         }
 
-        TempData[WarningMessage] = "Operation had an error!";
+        TempData[WarningMessage] = result.Message;
+        if (result.Errors.Any())
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
+        }
+        
         return View(model);
     }
 
@@ -46,32 +60,45 @@ public class AccessController(
     #region Edit role
 
     [HttpGet]
-    public async Task<IActionResult> EditRole(ulong id)
+    public async Task<IActionResult> EditRole(ulong id, CancellationToken cancellationToken)
     {
-        var result = await roleService.FillEditRoleDto(id);
-        if (result == null)
-            return NotFound();
+        var result = await _roleService.GetRoleForEdit(id, cancellationToken);
+        
+        if (!result.IsSuccess)
+        {
+            TempData[ErrorMessage] = result.Message;
+            return RedirectToAction(nameof(FilterRoles));
+        }
 
-        return View(result);
+        return View(result.Data);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> EditRole(EditRoleDto edit)
+    public async Task<IActionResult> EditRole(EditRoleDto edit, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
-            TempData[ErrorMessage] = "Input values ​​are not valid";
+            TempData[ErrorMessage] = "داده‌های وارد شده معتبر نیستند";
             return View(edit);
         }
 
-        var result = await roleService.EditRole(edit);
-        if(result)
+        var result = await _roleService.EditRole(edit, cancellationToken);
+        
+        if (result.IsSuccess)
         {
-                TempData[SuccessMessage] ="mission accomplished";
-                return RedirectToAction(nameof(FilterRoles));
+            TempData[SuccessMessage] = result.Message;
+            return RedirectToAction(nameof(FilterRoles));
         }
 
-        TempData[WarningMessage] = "Operation had an error!";
+        TempData[WarningMessage] = result.Message;
+        if (result.Errors.Any())
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
+        }
+        
         return View(edit);
     }
 
@@ -79,10 +106,11 @@ public class AccessController(
 
     #region Delete role
 
-    public async Task<IActionResult> DeleteRole(ulong roleId)
+    public async Task<IActionResult> DeleteRole(ulong roleId, CancellationToken cancellationToken)
     {
-        var result = await roleService.DeleteRole(roleId);
-        if (result)
+        var result = await _roleService.DeleteRole(roleId, cancellationToken);
+        
+        if (result.IsSuccess)
             return JsonResponseStatus.Success();
 
         return JsonResponseStatus.Error();

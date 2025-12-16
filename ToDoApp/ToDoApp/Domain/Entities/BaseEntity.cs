@@ -4,7 +4,7 @@ public abstract class BaseEntities<TKey> where TKey :  struct , IComparable<TKey
 {
     public TKey Id { get; set; }
 
-    public DateTime CreateDate { get; set; } = DateTime.Now;
+    public DateTime CreateDate { get; set; } = DateTime.UtcNow;
 
     public bool IsDelete { get; set; }
 

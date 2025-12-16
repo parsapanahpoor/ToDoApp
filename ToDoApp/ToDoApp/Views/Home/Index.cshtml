@@ -1,47 +1,179 @@
-﻿@{
-    ViewData["Title"] = "صفحه اصلی";
+﻿@using ToDoApp.Application.Extensions
+@using ToDoApp.Application.Resources
+@{
+    ViewData["Title"] = Translations.Navigation.Dashboard;
     var language = Context.Items["Language"]?.ToString() ?? "fa";
     var isPersian = language == "fa";
 }
 
-<div class="text-center mt-5">
+@if (User.Identity.IsAuthenticated)
+{
+    <!-- Modern Dashboard -->
+    <div class="container-modern" style="padding-top: 2rem; padding-bottom: 4rem;">
+        
+        <!-- Header Section -->
+        <div class="flex items-center justify-between mb-4 animate-fade-in">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">
+                    👋 @Translations.Dashboard.Welcome(User.Identity.Name ?? "")
+                </h1>
+                <p style="color: var(--text-secondary); font-size: 1rem;">
+                    @Translations.Dashboard.Subtitle
+                </p>
+            </div>
+            <div class="flex gap-sm items-center">
+                <button class="dark-mode-toggle" title="@(isPersian ? "تغییر حالت تاریک/روشن (Ctrl+D)" : "Toggle Dark Mode (Ctrl+D)")"></button>
+                <button class="btn-modern btn-icon btn-secondary" onclick="window.location.reload()" title="@Translations.Actions.Refresh">
+                    <i class="fa fa-refresh"></i>
+                </button>
+            </div>
+        </div>
 
-    @if (User.Identity.IsAuthenticated)
-    {
-        <h2>@(isPersian ? "خوش آمدید" : "Welcome") @User.Identity.Name</h2>
-        
-        <hr class="my-4" />
-        
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">@(isPersian ? "تقویم هفتگی" : "Weekly Calendar")</h5>
-                        <p class="card-text">@(isPersian ? "مدیریت Task های خود را در تقویم هفتگی انجام دهید" : "Manage your tasks in the weekly calendar")</p>
-                        <a class="btn btn-primary btn-lg" 
-                           asp-controller="Task" 
-                           asp-action="WeeklyCalendar">
-                            <i class="fa fa-calendar"></i> 
-                            @(isPersian ? "مشاهده تقویم" : "View Calendar")
-                        </a>
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-4 mb-4 animate-fade-in" style="animation-delay: 0.1s;">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="fa fa-tasks"></i>
+                </div>
+                <div class="stat-value" id="totalTasks">-</div>
+                <div class="stat-label">@Translations.Dashboard.ActiveTasks</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="fa fa-clock-o"></i>
+                </div>
+                <div class="stat-value" id="todayTasks">-</div>
+                <div class="stat-label">@Translations.Dashboard.TodayTasks</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="fa fa-check-circle"></i>
+                </div>
+                <div class="stat-value" id="completedTasks">-</div>
+                <div class="stat-label">@Translations.Dashboard.CompletedTasks</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="fa fa-bar-chart"></i>
+                </div>
+                <div class="stat-value" id="completionRate">-</div>
+                <div class="stat-label">@Translations.Dashboard.SuccessRate</div>
+            </div>
+        </div>
+
+        <!-- Progress This Week -->
+        <div class="modern-card mb-4 animate-fade-in" style="animation-delay: 0.2s;">
+            <div class="flex items-center justify-between mb-2">
+                <h3 style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">
+                    📊 @Translations.Dashboard.WeekProgress
+                </h3>
+                <span class="badge badge-primary" id="weekProgress">0%</span>
+            </div>
+            <div class="progress-bar" data-percent="0" id="weekProgressBar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.5rem;">
+                <span id="completedThisWeek">0</span> @(isPersian ? "از" : "of") <span id="totalThisWeek">0</span> @(isPersian ? "تسک تکمیل شده" : "tasks completed")
+            </p>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-3 gap-lg">
+            
+            <!-- Today's Tasks -->
+            <div class="modern-card animate-fade-in" style="grid-column: span 2; animation-delay: 0.3s;">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 style="font-size: 1.5rem; font-weight: 600; color: var(--text-primary);">
+                        📅 @Translations.Dashboard.TodayTasks
+                    </h2>
+                    <button class="btn-modern btn-primary" onclick="openQuickAddTask()">
+                        <i class="fa fa-plus"></i>
+                        @Translations.Dashboard.AddTask
+                    </button>
+                </div>
+
+                <div id="todayTasksList" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <!-- Tasks will be loaded here -->
+                    <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                        <i class="fa fa-spinner fa-spin" style="font-size: 2rem;"></i>
+                        <p style="margin-top: 1rem;">@(isPersian ? "در حال بارگذاری..." : "Loading...")</p>
                     </div>
+                </div>
+
+                <div class="flex items-center justify-between mt-3" style="padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <a href="/Task/WeeklyCalendar" class="btn-modern btn-ghost">
+                        <i class="fa fa-calendar"></i>
+                        @(isPersian ? "مشاهده تقویم کامل" : "View Full Calendar")
+                    </a>
+                    <span style="color: var(--text-secondary); font-size: 0.875rem;">
+                        @(isPersian ? "کلید میانبر:" : "Shortcut:") <kbd style="background: var(--surface-hover); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">Ctrl+N</kbd>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div style="display: flex; flex-direction: column; gap: var(--spacing-lg);">
+                
+                <!-- Quick Actions -->
+                <div class="modern-card animate-fade-in" style="animation-delay: 0.4s;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">
+                        ⚡ @Translations.Dashboard.QuickActions
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <a href="/Task/WeeklyCalendar" class="btn-modern btn-secondary w-full">
+                            <i class="fa fa-calendar"></i>
+                            @(isPersian ? "تقویم هفتگی" : "Weekly Calendar")
+                        </a>
+                        <button class="btn-modern btn-secondary w-full" onclick="showAllTasks()">
+                            <i class="fa fa-list"></i>
+                            @(isPersian ? "همه تسک‌ها" : "All Tasks")
+                        </button>
+                        <button class="btn-modern btn-secondary w-full" onclick="showCategories()">
+                            <i class="fa fa-folder"></i>
+                            @Translations.Navigation.Categories
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Categories -->
+                <div class="modern-card animate-fade-in" style="animation-delay: 0.5s;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem;">
+                        🏷️ @Translations.Navigation.Categories
+                    </h3>
+                    <div id="categoriesList" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <!-- Categories will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Tips -->
+                <div class="glass-card animate-fade-in" style="padding: 1.5rem; animation-delay: 0.6s;">
+                    <div style="font-size: 2rem; text-align: center; margin-bottom: 1rem;">💡</div>
+                    <h4 style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.5rem; text-align: center;">
+                        @Translations.Dashboard.DailyTip
+                    </h4>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; text-align: center; line-height: 1.6;">
+                        @Translations.Dashboard.TipMessage
+                    </p>
                 </div>
             </div>
         </div>
-    }
-    else
-    {
-        <h2>@(isPersian ? "به برنامه مدیریت کارها خوش آمدید" : "Welcome to ToDo App")</h2>
-        <p class="lead">@(isPersian ? "لطفا وارد شوید یا ثبت نام کنید" : "Please login or register")</p>
-        
-        <div class="mt-4">
-            <a class="btn btn-primary btn-lg me-2" asp-controller="Account" asp-action="Login">
-                @(isPersian ? "ورود" : "Login")
-            </a>
-            <a class="btn btn-outline-primary btn-lg" asp-controller="Account" asp-action="Register">
-                @(isPersian ? "ثبت نام" : "Register")
-            </a>
-        </div>
-    }
 
-</div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab" onclick="openQuickAddTask()" title="@Translations.Dashboard.AddTask (Ctrl+N)">
+        <i class="fa fa-plus"></i>
+    </button>
+
+    @section Scripts {
+        <script src="~/js/dashboard.js" asp-append-version="true"></script>
+    }
+}
+else
+{
+    <!-- Modern Landing Page -->
+    @await Html.PartialAsync("_LandingPage")
+}

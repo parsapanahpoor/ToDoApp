@@ -37,7 +37,10 @@ public class ApplicationDbContext : DbContext
         foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
             relationship.DeleteBehavior = DeleteBehavior.Restrict;
 
+        // Query Filters for Soft Delete
+        modelBuilder.Entity<UserEntity>().HasQueryFilter(p=> !p.IsDelete);
         modelBuilder.Entity<Role>().HasQueryFilter(p=> !p.IsDelete);
+        modelBuilder.Entity<UserRole>().HasQueryFilter(p=> !p.IsDelete);
         modelBuilder.Entity<Category>().HasQueryFilter(p=> !p.IsDelete);
         modelBuilder.Entity<TaskEntity>().HasQueryFilter(p=> !p.IsDelete);
 
@@ -53,6 +56,16 @@ public class ApplicationDbContext : DbContext
             .WithMany()
             .HasForeignKey(t => t.CategoryId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Indexes for better performance
+        modelBuilder.Entity<UserEntity>()
+            .HasIndex(u => u.Email);
+        
+        modelBuilder.Entity<UserEntity>()
+            .HasIndex(u => u.PhoneNumber);
+        
+        modelBuilder.Entity<UserEntity>()
+            .HasIndex(u => u.UserName);
 
         base.OnModelCreating(modelBuilder);
     }

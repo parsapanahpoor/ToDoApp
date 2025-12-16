@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using ToDoApp.Application.Services.Account;
+using ToDoApp.Application.Interfaces;
 
 namespace ToDoApp.Areas.Admin.ViewComponents;
 
 public class RoleSelectionViewComponent : ViewComponent
 {
-    private readonly UserService _userService;
+    private readonly IUserService _userService;
 
-    public RoleSelectionViewComponent(UserService userService)
+    public RoleSelectionViewComponent(IUserService userService)
     {
         _userService = userService;
     }

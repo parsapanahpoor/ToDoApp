@@ -1,26 +1,242 @@
-﻿@using ToDoApp.Domain.Model.Account
-@model LoginUserDto
+﻿@model ToDoApp.Domain.Model.Account.LoginUserDto
+@using ToDoApp.Application.Resources
 
-<h1>صفحه ی ورود</h1>
+@{
+    ViewData["Title"] = Translations.Auth.Login;
+    Layout = null;
+    var isPersian = Translations.IsPersian;
+}
 
-<div>
+<!DOCTYPE html>
+<html lang="@Translations.CurrentLanguage" dir="@(isPersian ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - @Translations.Common.AppName</title>
+    
+    <link rel="stylesheet" href="~/css/vazirmatn-font.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/admin/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="~/css/modern-design.css" asp-append-version="true" />
+    
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+        }
 
-    @if (ViewBag.Message != null)
-    {
-        <span class="badge badge-danger" > @ViewBag.Message </span>
-    }
+        .auth-card {
+            width: 100%;
+            max-width: 450px;
+            background: var(--surface);
+            border-radius: var(--radius-2xl);
+            padding: 3rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: fadeIn 0.5s ease-out;
+        }
 
-    <form asp-controller="Account"
-          asp-action="Login"
-          method="post">
+        .auth-logo {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            display: block;
+        }
 
-        <input type="text" asp-for="PhoneNumber" placeholder="شماره موبایل خود را وارد کنید." />
-        <br />
-        <input type="password" asp-for="Password" placeholder="کلمه ی عبور خود را وارد کنید." />
-        <br />
+        .auth-title {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
 
-        <input type="submit" value="ورود" class="btn btn-success" />
+        .auth-subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
 
-    </form>
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
 
-</div>
+        .form-label {
+            display: block;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            @(isPersian ? "right" : "left"): 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 0.875rem @(isPersian ? "1rem 0.875rem 3rem" : "3rem 0.875rem 1rem");
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all var(--transition-base);
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .auth-button {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.0625rem;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .auth-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .back-home a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .lang-switcher {
+            position: fixed;
+            top: 1.5rem;
+            @(isPersian ? "right" : "left"): 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-full);
+            padding: 0.5rem;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .lang-btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-full);
+            border: none;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .lang-btn.active {
+            background: white;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Language Switcher -->
+    <div class="lang-switcher">
+        <a href="?lang=fa" class="lang-btn @(isPersian ? "active" : "")">
+            فارسی
+        </a>
+        <a href="?lang=en" class="lang-btn @(!isPersian ? "active" : "")">
+            English
+        </a>
+    </div>
+
+    <div style="max-width: 450px; width: 100%;">
+        <div class="auth-card">
+            <span class="auth-logo">📝</span>
+            <h1 class="auth-title">@Translations.Auth.LoginTitle</h1>
+            <p class="auth-subtitle">@Translations.Auth.LoginSubtitle</p>
+
+            @if (!string.IsNullOrEmpty(ViewBag.Message))
+            {
+                <div style="background: rgba(239, 68, 68, 0.1); border-@(isPersian ? "right" : "left"): 4px solid var(--danger); color: var(--danger); padding: 1rem; border-radius: var(--radius-lg); margin-bottom: 1.5rem;">
+                    <i class="fa fa-exclamation-circle"></i> @ViewBag.Message
+                </div>
+            }
+
+            <form asp-action="Login" asp-controller="Account" method="post">
+                <div class="form-group">
+                    <label class="form-label" asp-for="PhoneNumber">@Translations.Auth.PhoneNumber</label>
+                    <div class="input-wrapper">
+                        <i class="fa fa-mobile input-icon"></i>
+                        <input asp-for="PhoneNumber" type="tel" class="auth-input" placeholder="09123456789" required />
+                    </div>
+                    <span asp-validation-for="PhoneNumber" style="color: var(--danger); font-size: 0.875rem;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" asp-for="Password">@Translations.Auth.Password</label>
+                    <div class="input-wrapper">
+                        <i class="fa fa-lock input-icon"></i>
+                        <input asp-for="Password" type="password" class="auth-input" placeholder="••••••••" required />
+                    </div>
+                    <span asp-validation-for="Password" style="color: var(--danger); font-size: 0.875rem;"></span>
+                </div>
+
+                <button type="submit" class="auth-button">
+                    <i class="fa fa-sign-in"></i> @Translations.Auth.Login
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                @Translations.Auth.NoAccount <a href="/Account/Register">@Translations.Auth.Register</a>
+            </div>
+        </div>
+
+        <div class="back-home">
+            <a href="/">
+                <i class="fa fa-arrow-@(isPersian ? "right" : "left")"></i> 
+                @Translations.Auth.BackToHome
+            </a>
+        </div>
+    </div>
+
+    <script src="~/js/modern-app.js"></script>
+</body>
+</html>

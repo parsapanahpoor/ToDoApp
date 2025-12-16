@@ -1,79 +1,234 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using ToDoApp.Application.Resources
+<!DOCTYPE html>
+<html lang="@(Translations.CurrentLanguage)" dir="@(Translations.IsPersian ? "rtl" : "ltr")">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ToDoApp</title>
+    <title>@ViewData["Title"] - @Translations.Common.AppName</title>
+    
+    <!-- Fonts -->
+    <link rel="stylesheet" href="~/css/vazirmatn-font.css" asp-append-version="true" />
+    
+    <!-- Bootstrap (for compatibility) -->
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ToDoApp.styles.css" asp-append-version="true" />
+    
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="~/admin/css/font-awesome.min.css" />
+    
+    <!-- Modern Design System -->
+    <link rel="stylesheet" href="~/css/modern-design.css" asp-append-version="true" />
+    
+    <!-- Legacy CSS (for old pages) -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    
     @await RenderSectionAsync("Styles", required: false)
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📝</text></svg>" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ToDoApp</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Task" asp-action="WeeklyCalendar">
-                                    <i class="fa fa-calendar"></i> تقویم هفتگی
+    @if (User.Identity.IsAuthenticated)
+    {
+        <!-- Modern Navigation Bar -->
+        <nav style="
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-sm);
+        ">
+            <div class="container-modern">
+                <div class="flex items-center justify-between" style="height: 4rem;">
+                    <!-- Logo & Brand -->
+                    <div class="flex items-center gap-md">
+                        <a href="/" style="
+                            font-size: 1.5rem;
+                            font-weight: 700;
+                            background: linear-gradient(135deg, var(--primary), var(--secondary));
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            background-clip: text;
+                            text-decoration: none;
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        ">
+                            📝 @Translations.Common.AppName
+                        </a>
+                        
+                        <!-- Navigation Links -->
+                        <div class="flex gap-sm" style="margin-@(Translations.IsPersian ? "right" : "left"): 2rem;">
+                            <a href="/" class="btn-modern btn-ghost">
+                                <i class="fa fa-home"></i>
+                                @Translations.Navigation.Dashboard
+                            </a>
+                            <a href="/Task/WeeklyCalendar" class="btn-modern btn-ghost">
+                                <i class="fa fa-calendar"></i>
+                                @Translations.Navigation.Calendar
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Right Section -->
+                    <div class="flex items-center gap-sm">
+                        <!-- Search (Quick) -->
+                        <div style="position: relative;">
+                            <input type="search" 
+                                   placeholder="@Translations.Actions.Search... (Ctrl+K)" 
+                                   class="input-modern"
+                                   style="
+                                       width: 250px;
+                                       padding: 0.5rem @(Translations.IsPersian ? "2.5rem 0.5rem 1rem" : "1rem 0.5rem 2.5rem");
+                                       font-size: 0.875rem;
+                                   ">
+                            <i class="fa fa-search" style="
+                                position: absolute;
+                                @(Translations.IsPersian ? "left" : "right"): 1rem;
+                                top: 50%;
+                                transform: translateY(-50%);
+                                color: var(--text-secondary);
+                            "></i>
+                        </div>
+
+                        <!-- Language Switcher -->
+                        <div class="flex gap-sm" style="background: var(--surface-hover); border-radius: var(--radius-full); padding: 0.25rem;">
+                            <a href="?lang=fa" class="btn-modern btn-icon btn-ghost @(Translations.IsPersian ? "active" : "")" style="@(Translations.IsPersian ? "background: var(--primary); color: white;" : "")">
+                                FA
+                            </a>
+                            <a href="?lang=en" class="btn-modern btn-icon btn-ghost @(Translations.IsEnglish ? "active" : "")" style="@(Translations.IsEnglish ? "background: var(--primary); color: white;" : "")">
+                                EN
+                            </a>
+                        </div>
+
+                        <!-- Dark Mode Toggle -->
+                        <button class="dark-mode-toggle" title="@(Translations.IsPersian ? "تغییر حالت تاریک/روشن" : "Toggle Dark Mode")"></button>
+
+                        <!-- User Menu -->
+                        <div style="position: relative;" class="user-menu">
+                            <button class="btn-modern btn-ghost flex items-center gap-sm" onclick="toggleUserMenu()">
+                                <span style="
+                                    width: 2rem;
+                                    height: 2rem;
+                                    border-radius: 50%;
+                                    background: linear-gradient(135deg, var(--primary), var(--secondary));
+                                    color: white;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-weight: 600;
+                                ">
+                                    @(User.Identity.Name?.Substring(0, 1).ToUpper() ?? "U")
+                                </span>
+                                <span>@User.Identity.Name</span>
+                                <i class="fa fa-chevron-down" style="font-size: 0.75rem;"></i>
+                            </button>
+                            
+                            <!-- Dropdown -->
+                            <div id="userMenuDropdown" style="
+                                display: none;
+                                position: absolute;
+                                top: calc(100% + 0.5rem);
+                                @(Translations.IsPersian ? "left" : "right"): 0;
+                                background: var(--surface);
+                                border: 1px solid var(--border);
+                                border-radius: var(--radius-lg);
+                                box-shadow: var(--shadow-xl);
+                                min-width: 200px;
+                                padding: 0.5rem;
+                                z-index: 1000;
+                            ">
+                                <a href="/Account/Profile" class="btn-modern btn-ghost w-full" style="justify-content: flex-start;">
+                                    <i class="fa fa-user"></i>
+                                    @Translations.Navigation.Profile
                                 </a>
-                            </li>
-                        }
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-dark">@User.Identity.Name</span>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Logout">خروج</a>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Login">ورود</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Account" asp-action="Register">ثبت نام</a>
-                            </li>
-                        }
-                    </ul>
+                                <a href="/Account/Settings" class="btn-modern btn-ghost w-full" style="justify-content: flex-start;">
+                                    <i class="fa fa-cog"></i>
+                                    @Translations.Navigation.Settings
+                                </a>
+                                <hr style="border-color: var(--border); margin: 0.5rem 0;">
+                                <a href="/Account/Logout" class="btn-modern btn-ghost w-full" style="justify-content: flex-start; color: var(--danger);">
+                                    <i class="fa fa-sign-out"></i>
+                                    @Translations.Navigation.Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
+    }
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - ToDoApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    <!-- Main Content -->
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <!-- Footer -->
+        <footer style="
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 2rem 0;
+            margin-top: 4rem;
+        ">
+            <div class="container-modern">
+                <div class="flex items-center justify-between" style="flex-wrap: wrap; gap: 1rem;">
+                    <div style="color: var(--text-secondary); font-size: 0.875rem;">
+                        © 2025 @Translations.Common.AppName. @Translations.Footer.Rights.
+                    </div>
+                    <div class="flex gap-sm">
+                        <a href="/Home/Privacy" class="btn-modern btn-ghost" style="font-size: 0.875rem;">
+                            @Translations.Footer.Privacy
+                        </a>
+                        <a href="/Home/Terms" class="btn-modern btn-ghost" style="font-size: 0.875rem;">
+                            @Translations.Footer.Terms
+                        </a>
+                        <a href="/Home/Contact" class="btn-modern btn-ghost" style="font-size: 0.875rem;">
+                            @Translations.Footer.Contact
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    }
+
+    <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/modern-app.js" asp-append-version="true"></script>
+    
     @await RenderSectionAsync("Scripts", required: false)
+
+    <script>
+        // User menu toggle
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('userMenuDropdown');
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-menu')) {
+                const dropdown = document.getElementById('userMenuDropdown');
+                if (dropdown) dropdown.style.display = 'none';
+            }
+        });
+
+        // Show welcome toast on first load
+        if (sessionStorage.getItem('welcomeShown') !== 'true') {
+            setTimeout(() => {
+                window.toast?.success('@(Translations.IsPersian ? "خوش آمدید! 👋" : "Welcome! 👋")');
+                sessionStorage.setItem('welcomeShown', 'true');
+            }, 500);
+        }
+
+        // Store current language in window object
+        window.currentLanguage = '@Translations.CurrentLanguage';
+        window.isPersian = @Translations.IsPersian.ToString().ToLower();
+    </script>
 </body>
 </html>

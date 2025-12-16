@@ -1,52 +1,57 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using ToDoApp.Domain.Entities.Account;
+using ToDoApp.Application.Interfaces;
 using ToDoApp.Domain.Model.Account;
-using ToDoApp.Infra;
 
 namespace ToDoApp.Controllers;
 
-public class AccountController(
-    ApplicationDbContext context) :
-    Controller
+public class AccountController : Controller
 {
+    private readonly IAccountService _accountService;
+    private readonly ILogger<AccountController> _logger;
+
+    public AccountController(
+        IAccountService accountService,
+        ILogger<AccountController> logger)
+    {
+        _accountService = accountService;
+        _logger = logger;
+    }
+
     #region Register
 
     [HttpGet]
     public IActionResult Register()
         => View();
 
-    [HttpPost , ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Register(
-        RegisterUserDto data ,
+        RegisterUserDto data,
         CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
-            return View(ModelState);
+            return View(data);
 
-        //User duplication checker
-        if(await context.Users.AnyAsync(user=> user.PhoneNumber == data.PhoneNumber))
-            return View(ModelState);
+        var result = await _accountService.Register(data, cancellationToken);
 
-        //Add user record to the data base 
-        var newUser = new UserEntity()
+        if (result.IsSuccess)
         {
-            CreateDate = DateTime.Now,
-            Email = null,
-            IsDelete = false , 
-            Password = data.Password ,
-            PhoneNumber = data.PhoneNumber,
-            UserName = data.PhoneNumber
-        };
+            TempData["SuccessMessage"] = result.Message;
+            return RedirectToAction(nameof(Login));
+        }
 
-        await context.Users.AddAsync(newUser);
-        await context.SaveChangesAsync();
+        TempData["ErrorMessage"] = result.Message;
+        if (result.Errors.Any())
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
+        }
 
-        return RedirectToAction(nameof(Login));
+        return View(data);
     }
 
     #endregion
@@ -57,44 +62,56 @@ public class AccountController(
     public IActionResult Login(string message)
     {
         ViewBag.Message = message;
-       return View();
+        return View();
     }
 
-    [HttpPost , ValidateAntiForgeryToken]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(
-        LoginUserDto data , 
+        LoginUserDto data,
         CancellationToken cancellationToken)
     {
-        //Exist phone number checker
-        if (!await context.Users.AnyAsync(user => user.PhoneNumber == data.PhoneNumber))
-            return RedirectToAction(nameof(Login) , "Account" , new { message = "کاربری با اطلاعات وارد شده یافت نشد." });
+        if (!ModelState.IsValid)
+            return View(data);
 
-        //Password checker
-        if (!await context.Users.AnyAsync(user => user.PhoneNumber == data.PhoneNumber && user.Password == data.Password))
-            return View("کلمه ی ورود ارسالی اشتباه است.");
+        var result = await _accountService.Login(data, cancellationToken);
 
-        //Set Coockie for user
+        if (!result.IsSuccess)
+        {
+            TempData["ErrorMessage"] = result.Message;
+            if (result.Errors.Any())
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error);
+                }
+            }
+            return View(data);
+        }
 
         #region Login User Into Identity
 
-        var user = await context.Users.FirstOrDefaultAsync(p=> p.PhoneNumber.Equals(data.PhoneNumber));
+        var user = result.Data;
 
         var claims = new List<Claim>
-            {
-                new (ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new (ClaimTypes.MobilePhone, user.PhoneNumber),
-                new (ClaimTypes.Name, user.UserName),
-            };
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.MobilePhone, user.PhoneNumber),
+            new(ClaimTypes.Name, user.UserName),
+        };
 
         var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(claimIdentity);
 
-        var authProps = new AuthenticationProperties();
-        authProps.IsPersistent = true;
+        var authProps = new AuthenticationProperties
+        {
+            IsPersistent = true
+        };
 
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProps);
 
         #endregion
+
+        _logger.LogInformation("User {PhoneNumber} logged in successfully", user.PhoneNumber);
 
         return RedirectToAction("Index", "Home");
     }
@@ -107,6 +124,7 @@ public class AccountController(
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync();
+        _logger.LogInformation("User logged out");
         return Redirect("/");
     }
 
